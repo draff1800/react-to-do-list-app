@@ -72,9 +72,12 @@ const TodoItemList = styled.ul`
 `;
 
 const TodoApp = () => {
-  const [items, setItems] = useState([]);
   const [directoryItemName, setDirectoryItemName] = useState("");
   const [todoItemText, setTodoItemText] = useState("");
+  const [directoryItems, setDirectoryItems] = useState([
+    {id: 1, name: ""}
+  ]);
+  const [todoItems, setTodoItems] = useState([]);
 
   const handleDirectoryItemNameChange = (event) => {
     setDirectoryItemName(event.target.value);
@@ -82,6 +85,19 @@ const TodoApp = () => {
 
   const handleTodoItemTextChange = (event) => {
     setTodoItemText(event.target.value);
+  }
+
+  const handleAddDirectoryItem = (event) => {
+    event.preventDefault();
+    const newId = directoryItems.length > 0 ? Math.max(...directoryItems.map(item => item.id)) + 1 : 1;
+
+    let newItem = {
+      id: newId,
+      name: directoryItemName
+    }
+
+    setDirectoryItems(directoryItems.concat(newItem));
+    setDirectoryItemName("");
   }
 
   const handleAddTodoItem = (event) => {
@@ -93,35 +109,35 @@ const TodoApp = () => {
       done: false
     };
 
-    setItems(items.concat(newItem));
+    setTodoItems(todoItems.concat(newItem));
     setTodoItemText("");
   }
 
-  const handleToggleTodoItemStatus = (itemId) => {
-    let updatedItems = items.map(item => {
+  const handleToggleTodoItem = (itemId) => {
+    let updatedItems = todoItems.map(item => {
       if (itemId === item.id)
         item.done = !item.done;
 
       return item;
     });
 
-    setItems(updatedItems);
+    setTodoItems(updatedItems);
   }
 
   const handleDeleteTodoItem = (itemId) => {
-    let remainingItems = items.filter(item => {
+    let remainingItems = todoItems.filter(item => {
       return item.id !== itemId;
     });
 
-    setItems([].concat(remainingItems));
+    setTodoItems([].concat(remainingItems));
   }
 
   const handleDeleteDoneTodoItems = (itemId) => {
-    let remainingItems = items.filter(item => {
+    let remainingItems = todoItems.filter(item => {
       return !item.done
     });
 
-    setItems([].concat(remainingItems));
+    setTodoItems([].concat(remainingItems));
   }
 
   const doneTodoItemsExist = (items) => {
@@ -146,29 +162,19 @@ const TodoApp = () => {
       </div>
       <div className="row">
         <div className="col-md-2">
-          <Directory directoryItemName={directoryItemName}/>
+          <Directory directoryItemName={directoryItemName} directoryItems={directoryItems} handleAddDirectoryItem={handleAddDirectoryItem}/>
         </div>
         <div className="col-md-3">
-          <div className="row">
-            <div className="col-md-8">
-              <button className="btn btn-danger btn-block" onClick={handleDeleteDoneTodoItems} disabled={!doneTodoItemsExist(items)}>
-                Remove Done items
-              </button>
-            </div>
-            <div className="col-md-8">
-              <Todos items={items} onToggleTodoItemStatus={handleToggleTodoItemStatus} onDeleteTodoItem={handleDeleteTodoItem} />
-            </div>
-          </div>
-          <form className="row">
-            <div className="col-md-8">
-              <input type="text" className="form-control" onChange={handleTodoItemTextChange} value={todoItemText} />
-            </div>
-            <div className="col-md-4">
-              <button className="btn btn-primary" onClick={handleAddTodoItem} disabled={!todoItemText}>
-                {"Add #" + (items.length + 1)}
-              </button>
-            </div>
-          </form>
+          <Editor 
+            todoItemText={todoItemText} 
+            handleDeleteDoneTodoItems={handleDeleteDoneTodoItems} 
+            doneTodoItemsExist={doneTodoItemsExist} 
+            todoItems={todoItems} 
+            handleToggleTodoItem={handleToggleTodoItem} 
+            handleDeleteTodoItem={handleDeleteTodoItem} 
+            handleTodoItemTextChange={handleTodoItemTextChange} 
+            handleAddTodoItem={handleAddTodoItem}>
+          </Editor>
         </div>
       </div>
     </div>
@@ -178,11 +184,40 @@ const TodoApp = () => {
 const Directory = (props) => {
   return (
     <div class="list-group">
-      <DirectoryItem className="btn btn-secondary active" active >{props.directoryItemName}</DirectoryItem>
-      <AddDirectoryItemButton className="btn btn-primary">
+      {props.directoryItems.map((item) => (
+        <DirectoryItem className="btn btn-secondary active" active >{props.directoryItemName}</DirectoryItem>
+      ))}
+      <AddDirectoryItemButton className="btn btn-primary" onClick={props.handleAddDirectoryItem}>
         <i class="bi bi-journal-plus" />
       </AddDirectoryItemButton>
     </div>
+  );
+}
+
+const Editor = (props) => {
+  return (
+    <>
+      <div className="row">
+      <div className="col-md-8">
+        <button className="btn btn-danger btn-block" onClick={props.handleDeleteDoneTodoItems} disabled={!props.doneTodoItemsExist(props.todoItems)}>
+          Remove Done items
+        </button>
+      </div>
+      <div className="col-md-8">
+        <Todos items={props.todoItems} onToggleTodoItem={props.handleToggleTodoItem} onDeleteTodoItem={props.handleDeleteTodoItem} />
+      </div>
+    </div>
+    <form className="row">
+      <div className="col-md-8">
+        <input type="text" className="form-control" onChange={props.handleTodoItemTextChange} value={props.todoItemText} />
+      </div>
+      <div className="col-md-4">
+        <button className="btn btn-primary" onClick={props.handleAddTodoItem} disabled={!props.todoItemText}>
+          {"Add #" + (props.todoItems.length + 1)}
+        </button>
+      </div>
+    </form>
+  </>
   );
 }
 
@@ -190,7 +225,7 @@ const TodoItem = (props) => {
   const [listItem, setListItem] = useState(null);
 
   const toggleItemStatus = () => {
-    props.onToggleTodoItemStatus(props.id);
+    props.onToggleTodoItem(props.id);
   }
 
   const deleteItem = () => {
@@ -228,7 +263,7 @@ const Todos = (props) => {
           id={item.id} 
           text={item.text} 
           done={item.done} 
-          onToggleTodoItemStatus={props.onToggleTodoItemStatus} 
+          onToggleTodoItem={props.onToggleTodoItem} 
           onDeleteTodoItem={props.onDeleteTodoItem} 
         />
       ))}
