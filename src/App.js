@@ -1,5 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import './App.scss';
+import styled from 'styled-components';
+
+const Title = styled.h3`
+  margin: 1rem 0;
+  color: #ff2968
+`;
+
+const UnorderedList = styled.ul`
+  padding-left: 0;
+
+  li.todoitem {
+    position: relative;
+    margin-bottom: 0.25rem;
+    padding: 0.5rem 2rem 0.5rem 0.5rem;
+    border-top: 1px solid #ccc;
+
+    &.done {
+      label.form-check-label {
+        color: #999;
+        text-decoration: line-through;
+      }
+    }
+
+    &.highlight {
+      border-color: #ff2968;
+      background-color: #ff8fb0;
+
+      &:last-child {
+        border-color: #ff2968;
+      }
+    }
+
+    &:last-child {
+      border-bottom: 1px solid #ccc;
+    }
+
+    button.btn-danger {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+    }
+
+    label.form-check-label {
+      width: 100%;
+
+      input.form-check-input {
+        margin-right: 1rem;
+      }
+    }
+  }
+`;
 
 const TodoApp = () => {
   const [items, setItems] = useState([]);
@@ -43,7 +93,7 @@ const TodoApp = () => {
 
   return (
     <div>
-      <h3 className="apptitle">TO DO LIST</h3>
+      <Title>TO DO LIST</Title>
       <div className="row">
         <div className="col-md-3">
           <TodoList items={items} onItemCompleted={markItemCompleted} onDeleteItem={handleDeleteItem} />
@@ -96,11 +146,11 @@ const TodoItem = (props) => {
 
 const TodoList = (props) => {
   return (
-    <ul className="todolist">
+    <UnorderedList>
       {props.items.map(item => (
         <TodoItem key={item.id} id={item.id} text={item.text} completed={item.done} onItemCompleted={props.onItemCompleted} onDeleteItem={props.onDeleteItem} />
       ))}
-    </ul>
+    </UnorderedList>
   );
 }
 
