@@ -71,7 +71,7 @@ const TodoItemList = styled.ul`
   }
 `;
 
-const App = () => {
+const TodoApp = () => {
   const [items, setItems] = useState([]);
   const [directoryItemName, setDirectoryItemName] = useState("");
   const [todoItemText, setTodoItemText] = useState("");
@@ -237,4 +237,4 @@ const Todos = (props) => {
 }
 
 // ReactDOM.render(<TodoApp />, document.getElementById("app")); // Put this back in on CodePen!
-export default App; // Leave this out on CodePen!
+export default TodoApp; // Leave this out on CodePen!
