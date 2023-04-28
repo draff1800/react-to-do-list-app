@@ -72,7 +72,7 @@ const TodoApp = () => {
     setText("");
   }
 
-  const markItemCompleted = (itemId) => {
+  const handleToggleItemStatus = (itemId) => {
     let updatedItems = items.map(item => {
       if (itemId === item.id)
         item.done = !item.done;
@@ -84,11 +84,25 @@ const TodoApp = () => {
   }
 
   const handleDeleteItem = (itemId) => {
-    let updatedItems = items.filter(item => {
+    let remainingItems = items.filter(item => {
       return item.id !== itemId;
     });
 
-    setItems([].concat(updatedItems));
+    setItems([].concat(remainingItems));
+  }
+
+  const handleDeleteDoneItems = (itemId) => {
+    let remainingItems = items.filter(item => {
+      return !item.done
+    });
+
+    setItems([].concat(remainingItems));
+  }
+
+  const doneItemsExist = (items) => {
+    if (items.filter(item => {return item.done}).length > 0) {
+      return true;
+    }
   }
 
   return (
@@ -96,7 +110,12 @@ const TodoApp = () => {
       <Title>TO DO LIST</Title>
       <div className="row">
         <div className="col-md-3">
-          <TodoList items={items} onItemCompleted={markItemCompleted} onDeleteItem={handleDeleteItem} />
+          <TodoList items={items} onToggleItemStatus={handleToggleItemStatus} onDeleteItem={handleDeleteItem} />
+        </div>
+        <div className="col-md-3">
+          <button className="btn btn-danger" onClick={handleDeleteDoneItems} disabled={!doneItemsExist(items)}>
+            Remove Done items
+          </button>
         </div>
       </div>
       <form className="row">
@@ -104,7 +123,9 @@ const TodoApp = () => {
           <input type="text" className="form-control" onChange={handleTextChange} value={text} />
         </div>
         <div className="col-md-3">
-          <button className="btn btn-primary" onClick={handleAddItem} disabled={!text}>{"Add #" + (items.length + 1)}</button>
+          <button className="btn btn-primary" onClick={handleAddItem} disabled={!text}>
+            {"Add #" + (items.length + 1)}
+          </button>
         </div>
       </form>
     </div>
@@ -114,11 +135,11 @@ const TodoApp = () => {
 const TodoItem = (props) => {
   const [listItem, setListItem] = useState(null);
 
-  const markCompleted = (event) => {
-    props.onItemCompleted(props.id);
+  const toggleItemStatus = () => {
+    props.onToggleItemStatus(props.id);
   }
 
-  const deleteItem = (event) => {
+  const deleteItem = () => {
     props.onDeleteItem(props.id);
   }
 
@@ -132,12 +153,12 @@ const TodoItem = (props) => {
     };
   }, [listItem]);
 
-  let itemClass = "form-check todoitem " + (props.completed ? "done" : "undone");
+  let itemClass = "form-check todoitem " + (props.done ? "done" : "undone");
 
   return (
     <li className={itemClass} ref={li => setListItem(li)}>
       <label className="form-check-label">
-        <input type="checkbox" className="form-check-input" onChange={markCompleted} /> {props.text}
+        <input type="checkbox" className="form-check-input" onChange={toggleItemStatus} /> {props.text}
       </label>
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteItem}>x</button>
     </li>
@@ -148,7 +169,14 @@ const TodoList = (props) => {
   return (
     <UnorderedList>
       {props.items.map(item => (
-        <TodoItem key={item.id} id={item.id} text={item.text} completed={item.done} onItemCompleted={props.onItemCompleted} onDeleteItem={props.onDeleteItem} />
+        <TodoItem 
+          key={item.id} 
+          id={item.id} 
+          text={item.text} 
+          done={item.done} 
+          onToggleItemStatus={props.onToggleItemStatus} 
+          onDeleteItem={props.onDeleteItem} 
+        />
       ))}
     </UnorderedList>
   );
