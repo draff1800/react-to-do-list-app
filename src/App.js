@@ -6,8 +6,20 @@ const Title = styled.h3`
   color: #ff2968
 `;
 
+const ListNameInput = styled.input`
+  border: none;
+  border-bottom: 2px solid #ced4da;
+  margin: 1rem 0;
+
+  &:focus {
+    outline: none;
+    border-bottom: 2px solid #007bff;
+  }
+`;
+
 const UnorderedList = styled.ul`
   padding-left: 0;
+  margin-top: 1rem;
 
   li.todoitem {
     position: relative;
@@ -106,28 +118,59 @@ const TodoApp = () => {
   }
 
   return (
-    <div>
-      <Title>TO DO LIST</Title>
+    <div class="container-fluid">
       <div className="row">
-        <div className="col-md-3">
-          <TodoList items={items} onToggleItemStatus={handleToggleItemStatus} onDeleteItem={handleDeleteItem} />
+        <div className="col-md-2">
+          <Title>TO DO LIST</Title>
         </div>
         <div className="col-md-3">
-          <button className="btn btn-danger" onClick={handleDeleteDoneItems} disabled={!doneItemsExist(items)}>
-            Remove Done items
-          </button>
+          <div className="row">
+            <div className="col-md-8">
+              <ListNameInput placeholder="List Name" />
+            </div>
+            <div className="col-md-4">
+              <button className="btn btn-success">
+                Save List
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      <form className="row">
-        <div className="col-md-3">
-          <input type="text" className="form-control" onChange={handleTextChange} value={text} />
-        </div>
-        <div className="col-md-3">
-          <button className="btn btn-primary" onClick={handleAddItem} disabled={!text}>
-            {"Add #" + (items.length + 1)}
+      <div className="row">
+        <div className="col-md-2">
+        <div class="list-group">
+          <button type="button" class="list-group-item list-group-item-action active">
+            Cras justo odio
           </button>
+          <button type="button" class="list-group-item list-group-item-action">Dapibus ac facilisis in</button>
+          <button type="button" class="list-group-item list-group-item-action">Morbi leo risus</button>
+          <button type="button" class="list-group-item list-group-item-action">Porta ac consectetur ac</button>
+          <button type="button" class="list-group-item list-group-item-action" disabled>Vestibulum at eros</button>
         </div>
-      </form>
+        </div>
+        <div className="col-md-3">
+          <div className="row">
+            <div className="col-md-8">
+              <button className="btn btn-danger btn-block" onClick={handleDeleteDoneItems} disabled={!doneItemsExist(items)}>
+                Remove Done items
+              </button>
+            </div>
+            <div className="col-md-8">
+              <TodoList items={items} onToggleItemStatus={handleToggleItemStatus} onDeleteItem={handleDeleteItem} />
+            </div>
+          </div>
+          <form className="row">
+            <div className="col-md-8">
+              <input type="text" className="form-control" onChange={handleTextChange} value={text} />
+            </div>
+            <div className="col-md-4">
+              <button className="btn btn-primary" onClick={handleAddItem} disabled={!text}>
+                {"Add #" + (items.length + 1)}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
