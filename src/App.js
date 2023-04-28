@@ -8,18 +8,6 @@ const AppTitle = styled.h3`
 
 const DirectoryItem = styled.button`
   min-height: 40px;
-  background-color: #E9ECEF;
-  color: #212529;
-  border-color: #C8C8C8;
-  border-width: 1px;
-  border-style: solid;
-
-  &:active {
-    background-color: #F2F2F2;
-    border-color: #C8C8C8;
-    color: #212529;
-    cursor: cursor
-  }
 `;
 
 const AddDirectoryItemButton = styled.button`
