@@ -1,12 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
-const Title = styled.h3`
+const AppTitle = styled.h3`
   margin: 1rem 0;
   color: #ff2968
 `;
 
-const ListNameInput = styled.input`
+const DirectoryItem = styled.button`
+  min-height: 40px;
+  background-color: #E9ECEF;
+  color: #212529;
+  border-color: #C8C8C8;
+  border-width: 1px;
+  border-style: solid;
+
+  &:active {
+    background-color: #F2F2F2;
+    border-color: #C8C8C8;
+    color: #212529;
+    cursor: cursor
+  }
+`;
+
+const AddDirectoryItemButton = styled.button`
+  margin-top: 1rem;
+`;
+
+const DirectoryItemNameInput = styled.input`
   border: none;
   border-bottom: 2px solid #ced4da;
   margin: 1rem 0;
@@ -17,7 +37,7 @@ const ListNameInput = styled.input`
   }
 `;
 
-const UnorderedList = styled.ul`
+const TodoItemList = styled.ul`
   padding-left: 0;
   margin-top: 1rem;
 
@@ -63,28 +83,33 @@ const UnorderedList = styled.ul`
   }
 `;
 
-const TodoApp = () => {
+const App = () => {
   const [items, setItems] = useState([]);
-  const [text, setText] = useState("");
+  const [directoryItemName, setDirectoryItemName] = useState("");
+  const [todoItemText, setTodoItemText] = useState("");
 
-  const handleTextChange = (event) => {
-    setText(event.target.value);
+  const handleDirectoryItemNameChange = (event) => {
+    setDirectoryItemName(event.target.value);
   }
 
-  const handleAddItem = (event) => {
+  const handleTodoItemTextChange = (event) => {
+    setTodoItemText(event.target.value);
+  }
+
+  const handleAddTodoItem = (event) => {
     event.preventDefault();
 
     let newItem = {
       id: Date.now(),
-      text: text,
+      text: todoItemText,
       done: false
     };
 
     setItems(items.concat(newItem));
-    setText("");
+    setTodoItemText("");
   }
 
-  const handleToggleItemStatus = (itemId) => {
+  const handleToggleTodoItemStatus = (itemId) => {
     let updatedItems = items.map(item => {
       if (itemId === item.id)
         item.done = !item.done;
@@ -95,7 +120,7 @@ const TodoApp = () => {
     setItems(updatedItems);
   }
 
-  const handleDeleteItem = (itemId) => {
+  const handleDeleteTodoItem = (itemId) => {
     let remainingItems = items.filter(item => {
       return item.id !== itemId;
     });
@@ -103,7 +128,7 @@ const TodoApp = () => {
     setItems([].concat(remainingItems));
   }
 
-  const handleDeleteDoneItems = (itemId) => {
+  const handleDeleteDoneTodoItems = (itemId) => {
     let remainingItems = items.filter(item => {
       return !item.done
     });
@@ -111,7 +136,7 @@ const TodoApp = () => {
     setItems([].concat(remainingItems));
   }
 
-  const doneItemsExist = (items) => {
+  const doneTodoItemsExist = (items) => {
     if (items.filter(item => {return item.done}).length > 0) {
       return true;
     }
@@ -121,50 +146,37 @@ const TodoApp = () => {
     <div class="container-fluid">
       <div className="row">
         <div className="col-md-2">
-          <Title>TO DO LIST</Title>
+          <AppTitle>TO DO LIST</AppTitle>
         </div>
         <div className="col-md-3">
           <div className="row">
             <div className="col-md-8">
-              <ListNameInput placeholder="List Name" />
-            </div>
-            <div className="col-md-4">
-              <button className="btn btn-success">
-                Save List
-              </button>
+              <DirectoryItemNameInput placeholder="List Name" onChange={handleDirectoryItemNameChange}/>
             </div>
           </div>
         </div>
       </div>
       <div className="row">
         <div className="col-md-2">
-        <div class="list-group">
-          <button type="button" class="list-group-item list-group-item-action active">
-            Cras justo odio
-          </button>
-          <button type="button" class="list-group-item list-group-item-action">Dapibus ac facilisis in</button>
-          <button type="button" class="list-group-item list-group-item-action">Morbi leo risus</button>
-          <button type="button" class="list-group-item list-group-item-action">Porta ac consectetur ac</button>
-          <button type="button" class="list-group-item list-group-item-action" disabled>Vestibulum at eros</button>
-        </div>
+          <Directory directoryItemName={directoryItemName}/>
         </div>
         <div className="col-md-3">
           <div className="row">
             <div className="col-md-8">
-              <button className="btn btn-danger btn-block" onClick={handleDeleteDoneItems} disabled={!doneItemsExist(items)}>
+              <button className="btn btn-danger btn-block" onClick={handleDeleteDoneTodoItems} disabled={!doneTodoItemsExist(items)}>
                 Remove Done items
               </button>
             </div>
             <div className="col-md-8">
-              <TodoList items={items} onToggleItemStatus={handleToggleItemStatus} onDeleteItem={handleDeleteItem} />
+              <Todos items={items} onToggleTodoItemStatus={handleToggleTodoItemStatus} onDeleteTodoItem={handleDeleteTodoItem} />
             </div>
           </div>
           <form className="row">
             <div className="col-md-8">
-              <input type="text" className="form-control" onChange={handleTextChange} value={text} />
+              <input type="text" className="form-control" onChange={handleTodoItemTextChange} value={todoItemText} />
             </div>
             <div className="col-md-4">
-              <button className="btn btn-primary" onClick={handleAddItem} disabled={!text}>
+              <button className="btn btn-primary" onClick={handleAddTodoItem} disabled={!todoItemText}>
                 {"Add #" + (items.length + 1)}
               </button>
             </div>
@@ -175,15 +187,26 @@ const TodoApp = () => {
   );
 }
 
+const Directory = (props) => {
+  return (
+    <div class="list-group">
+      <DirectoryItem className="btn btn-secondary active" active >{props.directoryItemName}</DirectoryItem>
+      <AddDirectoryItemButton className="btn btn-primary">
+        <i class="bi bi-journal-plus" />
+      </AddDirectoryItemButton>
+    </div>
+  );
+}
+
 const TodoItem = (props) => {
   const [listItem, setListItem] = useState(null);
 
   const toggleItemStatus = () => {
-    props.onToggleItemStatus(props.id);
+    props.onToggleTodoItemStatus(props.id);
   }
 
   const deleteItem = () => {
-    props.onDeleteItem(props.id);
+    props.onDeleteTodoItem(props.id);
   }
 
   useEffect(() => {
@@ -208,22 +231,22 @@ const TodoItem = (props) => {
   );
 }
 
-const TodoList = (props) => {
+const Todos = (props) => {
   return (
-    <UnorderedList>
+    <TodoItemList>
       {props.items.map(item => (
         <TodoItem 
           key={item.id} 
           id={item.id} 
           text={item.text} 
           done={item.done} 
-          onToggleItemStatus={props.onToggleItemStatus} 
-          onDeleteItem={props.onDeleteItem} 
+          onToggleTodoItemStatus={props.onToggleTodoItemStatus} 
+          onDeleteTodoItem={props.onDeleteTodoItem} 
         />
       ))}
-    </UnorderedList>
+    </TodoItemList>
   );
 }
 
 // ReactDOM.render(<TodoApp />, document.getElementById("app")); // Put this back in on CodePen!
-export default TodoApp; // Leave this out on CodePen!
+export default App; // Leave this out on CodePen!
