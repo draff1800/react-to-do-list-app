@@ -30,7 +30,6 @@ const TodoApp = () => {
       return item;
     });
 
-    // State Updates are Merged
     setItems(updatedItems);
   }
 
@@ -73,15 +72,11 @@ const TodoItem = (props) => {
     props.onDeleteItem(props.id);
   }
 
-  // Highlight newly added item for several seconds.
   useEffect(() => {
     if (listItem) {
-      // 1. Add highlight class.
       listItem.classList.add("highlight");
 
-      // 2. Set timeout.
       setTimeout(() => {
-        // 3. Remove highlight class.
         listItem.classList.remove("highlight");
       }, 500);
     };
