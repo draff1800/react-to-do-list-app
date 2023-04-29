@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 const AppWrapper = styled.div`
-  min-height: 100vh;
+  min-height: 99vh;
   min-width: 99vw;
   background: linear-gradient(to bottom right, #FFFFFF, #F0F0F0);
 `;
@@ -14,10 +14,27 @@ const AppTitle = styled.h3`
   letter-spacing: 0.05em;
 `;
 
-const DirectoryItem = styled.button`
+const DirectoryItem = styled.div`
   margin: 0.3rem 0;
   min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0.75rem;
   border: 2px solid #ced4da;
+  background-color: ${({ active }) => (active ? '#d1d1d1' : '#fff')};
+  color: ${({ active }) => (active ? '#495057' : '#495057')};
+  border-radius: 0.25rem;
+  cursor: pointer;
+`;
+
+const DirectoryItemDeleteIcon = styled.i`
+  margin-left: auto;
+  cursor: pointer;
+
+  &:hover {
+    color: #dc3545;
+  }
 `;
 
 const AddDirectoryItemButton = styled.button`
@@ -128,6 +145,30 @@ const TodoApp = () => {
     setDirectoryItems(updatedItems);
   }
 
+  const handleDeleteDirectoryItem = (id) => {
+    const deletingActiveDirectory = directoryItems.filter(item => {return item.active && item.id === id}).length > 0;
+    let remainingDirectoryItems;
+
+    if (deletingActiveDirectory) {
+      const directoryItemsBelow = directoryItems.filter(item => {return item.id < id});
+      const directoryItemsAbove = directoryItems.filter(item => {return item.id > id});
+      const newActiveDirectoryId = directoryItemsBelow.length > 0 ? directoryItemsBelow[directoryItemsBelow.length - 1].id : directoryItemsAbove[0].id
+
+      remainingDirectoryItems = directoryItems.map(item => {
+        if (item.id === newActiveDirectoryId)
+          item.active = !item.active;
+  
+        return item;
+      })
+    }
+
+    remainingDirectoryItems = directoryItems.filter(item => {return item.id !== id});
+    const remainingTodoItems = todoItems.filter(item => {return item.directoryId !== id});
+
+    setDirectoryItems(remainingDirectoryItems);
+    setTodoItems(remainingTodoItems);
+  }
+
   const handleAddTodoItem = (text) => {
     let newItem = {
       id: Date.now(),
@@ -137,6 +178,14 @@ const TodoApp = () => {
     };
 
     setTodoItems(todoItems.concat(newItem));
+  }
+
+  const handleDeleteTodoItem = (itemId) => {
+    let remainingItems = todoItems.filter(item => {
+      return item.id !== itemId;
+    });
+
+    setTodoItems(remainingItems);
   }
 
   const handleDirectoryItemClick = (itemId) => {
@@ -168,14 +217,6 @@ const TodoApp = () => {
     setTodoItems(updatedItems);
   }
 
-  const handleDeleteTodoItem = (itemId) => {
-    let remainingItems = todoItems.filter(item => {
-      return item.id !== itemId;
-    });
-
-    setTodoItems([].concat(remainingItems));
-  }
-
   const handleDeleteDoneTodoItems = () => {
     let remainingItems = todoItems.filter(item => {
       return !item.done || (item.directoryId !== getActiveDirectoryItem().id)
@@ -203,6 +244,7 @@ const TodoApp = () => {
             directoryItems={directoryItems} 
             handleAddDirectoryItem={handleAddDirectoryItem}
             handleDirectoryItemClick={handleDirectoryItemClick}
+            handleDeleteDirectoryItem={handleDeleteDirectoryItem}
           />
         </div>
         <div className="col-md-5">
@@ -223,16 +265,21 @@ const TodoApp = () => {
 }
 
 const Directory = (props) => {
+  const oneItemLeft = props.directoryItems.length === 1;
+
   return (
     <div className="list-group">
       {props.directoryItems.map((item) => (
-        <DirectoryItem key={item.id} className={`btn btn-light ${item.active ? 'active' : ''}`} onClick={() => props.handleDirectoryItemClick(item.id)}>{item.name}</DirectoryItem>
+        <DirectoryItem key={item.id} active={item.active} onClick={() => props.handleDirectoryItemClick(item.id)}>
+          {item.name}
+          {!oneItemLeft && <DirectoryItemDeleteIcon className="bi bi-trash" onClick={(e) => {e.stopPropagation(); props.handleDeleteDirectoryItem(item.id)}}/>}
+        </DirectoryItem>
       ))}
       <AddDirectoryItemButton className="btn btn-primary" onClick={props.handleAddDirectoryItem}>
         <i className="bi bi-journal-plus" />
       </AddDirectoryItemButton>
     </div>
-  );
+  )
 }
 
 const Editor = (props) => {
