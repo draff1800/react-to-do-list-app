@@ -1,18 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
+const AppWrapper = styled.div`
+  min-height: 100vh;
+  min-width: 99vw;
+  background: linear-gradient(to bottom right, #FFFFFF, #F0F0F0);
+`;
+
 const AppTitle = styled.h3`
   margin: 1rem 0;
-  color: #ff2968
+  font-weight: 600;
+  color: #333333;
+  letter-spacing: 0.05em;
 `;
 
 const DirectoryItem = styled.button`
+  margin: 0.3rem 0;
   min-height: 40px;
+  border: 2px solid #ced4da;
 `;
 
 const AddDirectoryItemButton = styled.button`
   margin-top: 1rem;
+  background: linear-gradient(to bottom right, #0077CC, #005299);
 `;
+
+const AddTodoItemButton = styled.button`
+  background: linear-gradient(to bottom right, #0077CC, #005299);
+`;
+
+const RemoveDoneItemsButton = styled.button`
+  background: linear-gradient(to bottom right, #FF4D4D, #BF2E2E);
+`
 
 const DirectoryItemNameInput = styled.input`
   border: none;
@@ -43,11 +62,11 @@ const TodoItemList = styled.ul`
     }
 
     &.highlight {
-      border-color: #ff2968;
-      background-color: #ff8fb0;
-
+      border-color: #0077cc;
+      background-color: #bfe3ff;
+    
       &:last-child {
-        border-color: #ff2968;
+        border-color: #0077cc;
       }
     }
 
@@ -59,6 +78,7 @@ const TodoItemList = styled.ul`
       position: absolute;
       top: 0.5rem;
       right: 0.5rem;
+      background: linear-gradient(to bottom right, #FF4D4D, #BF2E2E);
     }
 
     label.form-check-label {
@@ -75,7 +95,7 @@ const TodoApp = () => {
   const [directoryItemName, setDirectoryItemName] = useState("");
   const [todoItemText, setTodoItemText] = useState("");
   const [directoryItems, setDirectoryItems] = useState([
-    {id: 1, name: ""}
+    {id: 1, name: "", active: true}
   ]);
   const [todoItems, setTodoItems] = useState([]);
 
@@ -93,11 +113,18 @@ const TodoApp = () => {
 
     let newItem = {
       id: newId,
-      name: directoryItemName
+      name: "",
+      active: true
     }
 
-    setDirectoryItems(directoryItems.concat(newItem));
-    setDirectoryItemName("");
+    let updatedItems = directoryItems.map(item => {
+      if (item.active)
+        item.active = !item.active;
+
+      return item;
+    }).concat(newItem);
+
+    setDirectoryItems(updatedItems);
   }
 
   const handleAddTodoItem = (event) => {
@@ -111,6 +138,24 @@ const TodoApp = () => {
 
     setTodoItems(todoItems.concat(newItem));
     setTodoItemText("");
+  }
+
+  const handleDirectoryItemClick = (itemId) => {
+    let updatedItems = directoryItems.map(item => {
+      if (item.active)
+        item.active = !item.active;
+
+      return item;
+    })
+
+    updatedItems = directoryItems.map(item => {
+      if (itemId === item.id)
+        item.active = !item.active;
+
+      return item;
+    });
+
+    setDirectoryItems(updatedItems);
   }
 
   const handleToggleTodoItem = (itemId) => {
@@ -147,24 +192,18 @@ const TodoApp = () => {
   }
 
   return (
-    <div class="container-fluid">
+    <AppWrapper className="container">
       <div className="row">
         <div className="col-md-2">
-          <AppTitle>TO DO LIST</AppTitle>
+          <AppTitle>To-Do Lists</AppTitle>
+          <Directory 
+            directoryItemName={directoryItemName} 
+            directoryItems={directoryItems} 
+            handleAddDirectoryItem={handleAddDirectoryItem}
+            handleDirectoryItemClick={handleDirectoryItemClick}
+          />
         </div>
-        <div className="col-md-3">
-          <div className="row">
-            <div className="col-md-8">
-              <DirectoryItemNameInput placeholder="List Name" onChange={handleDirectoryItemNameChange}/>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="row">
-        <div className="col-md-2">
-          <Directory directoryItemName={directoryItemName} directoryItems={directoryItems} handleAddDirectoryItem={handleAddDirectoryItem}/>
-        </div>
-        <div className="col-md-3">
+        <div className="col-md-5">
           <Editor 
             todoItemText={todoItemText} 
             handleDeleteDoneTodoItems={handleDeleteDoneTodoItems} 
@@ -173,22 +212,23 @@ const TodoApp = () => {
             handleToggleTodoItem={handleToggleTodoItem} 
             handleDeleteTodoItem={handleDeleteTodoItem} 
             handleTodoItemTextChange={handleTodoItemTextChange} 
-            handleAddTodoItem={handleAddTodoItem}>
-          </Editor>
+            handleAddTodoItem={handleAddTodoItem}
+            handleDirectoryItemNameChange={handleDirectoryItemNameChange}
+          />
         </div>
       </div>
-    </div>
+    </AppWrapper>
   );
 }
 
 const Directory = (props) => {
   return (
-    <div class="list-group">
+    <div className="list-group">
       {props.directoryItems.map((item) => (
-        <DirectoryItem className="btn btn-secondary active" active >{props.directoryItemName}</DirectoryItem>
+        <DirectoryItem key={item.id} className={`btn btn-light ${item.active ? 'active' : ''}`} onClick={() => props.handleDirectoryItemClick(item.id)}></DirectoryItem>
       ))}
       <AddDirectoryItemButton className="btn btn-primary" onClick={props.handleAddDirectoryItem}>
-        <i class="bi bi-journal-plus" />
+        <i className="bi bi-journal-plus" />
       </AddDirectoryItemButton>
     </div>
   );
@@ -197,11 +237,15 @@ const Directory = (props) => {
 const Editor = (props) => {
   return (
     <>
+      <DirectoryItemNameInput 
+        placeholder="List Name" 
+        onChange={props.handleDirectoryItemNameChange}
+      />
       <div className="row">
       <div className="col-md-8">
-        <button className="btn btn-danger btn-block" onClick={props.handleDeleteDoneTodoItems} disabled={!props.doneTodoItemsExist(props.todoItems)}>
+        <RemoveDoneItemsButton className="btn btn-danger btn-block" onClick={props.handleDeleteDoneTodoItems} disabled={!props.doneTodoItemsExist(props.todoItems)}>
           Remove Done items
-        </button>
+        </RemoveDoneItemsButton>
       </div>
       <div className="col-md-8">
         <Todos items={props.todoItems} onToggleTodoItem={props.handleToggleTodoItem} onDeleteTodoItem={props.handleDeleteTodoItem} />
@@ -212,9 +256,9 @@ const Editor = (props) => {
         <input type="text" className="form-control" onChange={props.handleTodoItemTextChange} value={props.todoItemText} />
       </div>
       <div className="col-md-4">
-        <button className="btn btn-primary" onClick={props.handleAddTodoItem} disabled={!props.todoItemText}>
+        <AddTodoItemButton className="btn btn-primary" onClick={props.handleAddTodoItem} disabled={!props.todoItemText}>
           {"Add #" + (props.todoItems.length + 1)}
-        </button>
+        </AddTodoItemButton>
       </div>
     </form>
   </>
@@ -247,9 +291,11 @@ const TodoItem = (props) => {
   return (
     <li className={itemClass} ref={li => setListItem(li)}>
       <label className="form-check-label">
-        <input type="checkbox" className="form-check-input" onChange={toggleItemStatus} /> {props.text}
+        <input type="checkbox" onChange={toggleItemStatus} /> {props.text}
       </label>
-      <button type="button" className="btn btn-danger btn-sm" onClick={deleteItem}>x</button>
+      <button type="button" className="btn btn-danger btn-sm" onClick={deleteItem}>
+        <i className="bi bi-trash" />
+      </button>
     </li>
   );
 }
