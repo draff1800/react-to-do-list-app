@@ -92,15 +92,21 @@ const TodoItemList = styled.ul`
 `;
 
 const TodoApp = () => {
-  const [directoryItemName, setDirectoryItemName] = useState("");
   const [todoItemText, setTodoItemText] = useState("");
   const [directoryItems, setDirectoryItems] = useState([
     {id: 1, name: "", active: true}
   ]);
   const [todoItems, setTodoItems] = useState([]);
 
-  const handleDirectoryItemNameChange = (event) => {
-    setDirectoryItemName(event.target.value);
+  const handleDirectoryItemNameChange = (event, itemId) => {
+    let updatedItems = directoryItems.map(item => {
+      if (itemId === item.id) 
+        item.name = event.target.value;
+
+      return item;
+    });
+
+    setDirectoryItems(updatedItems);
   }
 
   const handleTodoItemTextChange = (event) => {
@@ -177,7 +183,7 @@ const TodoApp = () => {
     setTodoItems([].concat(remainingItems));
   }
 
-  const handleDeleteDoneTodoItems = (itemId) => {
+  const handleDeleteDoneTodoItems = () => {
     let remainingItems = todoItems.filter(item => {
       return !item.done
     });
@@ -191,13 +197,16 @@ const TodoApp = () => {
     }
   }
 
+  const getActiveDirectoryItem = () => {
+    return directoryItems.filter(item => {return item.active})[0];
+  }
+
   return (
     <AppWrapper className="container">
       <div className="row">
         <div className="col-md-2">
           <AppTitle>To-Do Lists</AppTitle>
           <Directory 
-            directoryItemName={directoryItemName} 
             directoryItems={directoryItems} 
             handleAddDirectoryItem={handleAddDirectoryItem}
             handleDirectoryItemClick={handleDirectoryItemClick}
@@ -214,6 +223,7 @@ const TodoApp = () => {
             handleTodoItemTextChange={handleTodoItemTextChange} 
             handleAddTodoItem={handleAddTodoItem}
             handleDirectoryItemNameChange={handleDirectoryItemNameChange}
+            getActiveDirectoryItem={getActiveDirectoryItem}
           />
         </div>
       </div>
@@ -225,7 +235,7 @@ const Directory = (props) => {
   return (
     <div className="list-group">
       {props.directoryItems.map((item) => (
-        <DirectoryItem key={item.id} className={`btn btn-light ${item.active ? 'active' : ''}`} onClick={() => props.handleDirectoryItemClick(item.id)}></DirectoryItem>
+        <DirectoryItem key={item.id} className={`btn btn-light ${item.active ? 'active' : ''}`} onClick={() => props.handleDirectoryItemClick(item.id)}>{item.name}</DirectoryItem>
       ))}
       <AddDirectoryItemButton className="btn btn-primary" onClick={props.handleAddDirectoryItem}>
         <i className="bi bi-journal-plus" />
@@ -239,7 +249,8 @@ const Editor = (props) => {
     <>
       <DirectoryItemNameInput 
         placeholder="List Name" 
-        onChange={props.handleDirectoryItemNameChange}
+        onChange={(e) => props.handleDirectoryItemNameChange(e, props.getActiveDirectoryItem().id)}
+        value={props.getActiveDirectoryItem().name}
       />
       <div className="row">
       <div className="col-md-8">
