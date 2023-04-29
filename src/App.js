@@ -9,46 +9,37 @@ const AppWrapper = styled.div`
 
 const AppTitle = styled.h3`
   margin: 1rem 0;
-  font-weight: 600;
   color: #333333;
+  font-weight: 600;
   letter-spacing: 0.05em;
 `;
 
 const DirectoryItem = styled.div`
   margin: 0.3rem 0;
   min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.375rem 0.75rem;
   border: 2px solid #ced4da;
   background-color: ${({ active }) => (active ? '#d1d1d1' : '#fff')};
-  color: ${({ active }) => (active ? '#495057' : '#495057')};
+  color: #495057;
+  padding: 0.375rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
   border-radius: 0.25rem;
   cursor: pointer;
-`;
 
-const DirectoryItemDeleteIcon = styled.i`
-  margin-left: auto;
-  cursor: pointer;
-
-  &:hover {
-    color: #dc3545;
-  }
+    i.bi {
+      margin-left: auto;
+      cursor: pointer;
+    
+      &:hover {
+        color: #dc3545;
+      }
+    }
 `;
 
 const AddDirectoryItemButton = styled.button`
   margin-top: 1rem;
   background: linear-gradient(to bottom right, #0077CC, #005299);
 `;
-
-const AddTodoItemButton = styled.button`
-  background: linear-gradient(to bottom right, #0077CC, #005299);
-`;
-
-const RemoveDoneItemsButton = styled.button`
-  background: linear-gradient(to bottom right, #FF4D4D, #BF2E2E);
-`
 
 const DirectoryItemNameInput = styled.input`
   border: none;
@@ -61,12 +52,19 @@ const DirectoryItemNameInput = styled.input`
   }
 `;
 
+const AddTodoItemButton = styled.button`
+  background: linear-gradient(to bottom right, #0077CC, #005299);
+`;
+
+const RemoveDoneItemsButton = styled.button`
+  background: linear-gradient(to bottom right, #FF4D4D, #BF2E2E);
+`
+
 const TodoItemList = styled.ul`
   padding-left: 0;
   margin-top: 1rem;
 
   li.todoitem {
-    position: relative;
     margin-bottom: 0.25rem;
     padding: 0.5rem 2rem 0.5rem 0.5rem;
     border-top: 1px solid #ccc;
@@ -96,14 +94,6 @@ const TodoItemList = styled.ul`
       top: 0.5rem;
       right: 0.5rem;
       background: linear-gradient(to bottom right, #FF4D4D, #BF2E2E);
-    }
-
-    label.form-check-label {
-      width: 100%;
-
-      input.form-check-input {
-        margin-right: 1rem;
-      }
     }
   }
 `;
@@ -272,7 +262,7 @@ const Directory = (props) => {
       {props.directoryItems.map((item) => (
         <DirectoryItem key={item.id} active={item.active} onClick={() => props.handleDirectoryItemClick(item.id)}>
           {item.name}
-          {!oneItemLeft && <DirectoryItemDeleteIcon className="bi bi-trash" onClick={(e) => {e.stopPropagation(); props.handleDeleteDirectoryItem(item.id)}}/>}
+          {!oneItemLeft && <i className="bi bi-trash" onClick={(e) => {e.stopPropagation(); props.handleDeleteDirectoryItem(item.id)}}/>}
         </DirectoryItem>
       ))}
       <AddDirectoryItemButton className="btn btn-primary" onClick={props.handleAddDirectoryItem}>
