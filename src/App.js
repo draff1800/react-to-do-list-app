@@ -27,14 +27,14 @@ const DirectoryItem = styled.div`
   overflow: hidden;
   cursor: pointer;
 
-    i.bi {
-      margin-left: auto;
-      cursor: pointer;
-    
-      &:hover {
-        color: #dc3545;
-      }
+  i.bi {
+    margin-left: auto;
+    cursor: pointer;
+  
+    &:hover {
+      color: #dc3545;
     }
+  }
 `;
 
 const AddDirectoryItemButton = styled.button`
@@ -239,7 +239,7 @@ const TodoApp = () => {
 }
 
 const Directory = (props) => {
-  const directoryIsActive = (directoryId) => { return (directoryId === props.activeDirectoryItem.id); }
+  const directoryItemIsActive = (directoryId) => { return (directoryId === props.activeDirectoryItem.id); }
   const oneItemLeft = props.directoryItems.length === 1;
 
   return (
@@ -248,7 +248,7 @@ const Directory = (props) => {
         <DirectoryItem 
           key={item.id} 
           active={item.active} 
-          onClick={() => {if (!directoryIsActive(item.id)) props.handleChangeActiveDirectoryItem(item.id)}}
+          onClick={() => {if (!directoryItemIsActive(item.id)) props.handleChangeActiveDirectoryItem(item.id)}}
         >
           {item.name}
           {!oneItemLeft && <i 
