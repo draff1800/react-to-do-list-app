@@ -270,7 +270,7 @@ const Editor = (props) => {
       </div>
       <div className="col-md-4">
         <AddTodoItemButton className="btn btn-primary" onClick={(e) => handleAddTodoItem(todoItemText)} disabled={!todoItemText}>
-          {"Add #" + (props.todoItems.length + 1)}
+          {"Add #" + (props.todoItems.filter(item => {return item.directoryId === props.getActiveDirectoryItem().id}).length + 1)}
         </AddTodoItemButton>
       </div>
     </form>
