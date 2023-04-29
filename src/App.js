@@ -24,6 +24,7 @@ const DirectoryItem = styled.div`
   display: inline-flex;
   align-items: center;
   border-radius: 0.25rem;
+  overflow: hidden;
   cursor: pointer;
 
     i.bi {
@@ -63,6 +64,7 @@ const RemoveDoneItemsButton = styled.button`
 const TodoItemList = styled.ul`
   padding-left: 0;
   margin-top: 1rem;
+  overflow: hidden;
 
   li.todoitem {
     margin-bottom: 0.25rem;
@@ -95,6 +97,10 @@ const TodoItemList = styled.ul`
       right: 0.5rem;
       background: linear-gradient(to bottom right, #FF4D4D, #BF2E2E);
     }
+
+    label.form-check-label {
+      width: 100%;
+    }
   }
 `;
 
@@ -104,11 +110,11 @@ const TodoApp = () => {
   ]);
   const [todoItems, setTodoItems] = useState([]);
 
-  const handleDirectoryItemNameChange = (event, itemId) => {
-    let updatedItems = directoryItems.map(item => {
-      if (itemId === item.id) 
-        item.name = event.target.value;
+  const activeDirectoryItem = directoryItems.find(item => item.active);
 
+  const handleRenameDirectoryItem = (event, itemId) => {
+    let updatedItems = directoryItems.map(item => {
+      if (itemId === item.id) item.name = event.target.value;
       return item;
     });
 
@@ -117,7 +123,7 @@ const TodoApp = () => {
 
   const handleAddDirectoryItem = (event) => {
     event.preventDefault();
-    const newId = directoryItems.length > 0 ? Math.max(...directoryItems.map(item => item.id)) + 1 : 1;
+    const newId = Math.max(...directoryItems.map(item => item.id)) + 1
 
     let newItem = {
       id: newId,
@@ -126,9 +132,7 @@ const TodoApp = () => {
     }
 
     let updatedItems = directoryItems.map(item => {
-      if (item.active)
-        item.active = !item.active;
-
+      if (item.active) item.active = !item.active;
       return item;
     }).concat(newItem);
 
@@ -136,33 +140,41 @@ const TodoApp = () => {
   }
 
   const handleDeleteDirectoryItem = (id) => {
-    const deletingActiveDirectory = directoryItems.filter(item => {return item.active && item.id === id}).length > 0;
-    let remainingDirectoryItems;
+    let remainingDirectoryItems = directoryItems.filter(item => item.id !== id);
+    const remainingTodoItems = todoItems.filter(item => item.directoryId !== id);
 
-    if (deletingActiveDirectory) {
-      const directoryItemsBelow = directoryItems.filter(item => {return item.id < id});
-      const directoryItemsAbove = directoryItems.filter(item => {return item.id > id});
-      const newActiveDirectoryId = directoryItemsBelow.length > 0 ? directoryItemsBelow[directoryItemsBelow.length - 1].id : directoryItemsAbove[0].id
-
-      remainingDirectoryItems = directoryItems.map(item => {
-        if (item.id === newActiveDirectoryId)
-          item.active = !item.active;
+    const deletedItemIndex = directoryItems.findIndex(item => item.id === id);
+    const isDeletingActiveDirectory = directoryItems[deletedItemIndex].active;
   
-        return item;
-      })
+    if (isDeletingActiveDirectory) {
+      const newActiveIndex = deletedItemIndex > 0 ? deletedItemIndex - 1 : 0;
+      remainingDirectoryItems = remainingDirectoryItems.map((item, index) => {
+        return index === newActiveIndex ? { ...item, active: true } : item;
+      });
     }
-
-    remainingDirectoryItems = directoryItems.filter(item => {return item.id !== id});
-    const remainingTodoItems = todoItems.filter(item => {return item.directoryId !== id});
-
+  
     setDirectoryItems(remainingDirectoryItems);
     setTodoItems(remainingTodoItems);
-  }
+  };
 
-  const handleAddTodoItem = (text) => {
+  const handleChangeActiveDirectoryItem = (itemId) => {
+    const updatedItems = directoryItems.map(item => {
+      if (item.active || itemId === item.id) {
+        return { ...item, active: !item.active };
+      }
+  
+      return item;
+    });
+  
+    setDirectoryItems(updatedItems);
+  };
+
+  const handleAddTodoItem = (event, text) => {
+    event.preventDefault();
+
     let newItem = {
       id: Date.now(),
-      directoryId: getActiveDirectoryItem().id,
+      directoryId: activeDirectoryItem.id,
       text: text,
       done: false
     };
@@ -178,22 +190,12 @@ const TodoApp = () => {
     setTodoItems(remainingItems);
   }
 
-  const handleDirectoryItemClick = (itemId) => {
-    let updatedItems = directoryItems.map(item => {
-      if (item.active)
-        item.active = !item.active;
-
-      return item;
-    })
-
-    updatedItems = directoryItems.map(item => {
-      if (itemId === item.id)
-        item.active = !item.active;
-
-      return item;
+  const handleDeleteDoneTodoItems = () => {
+    let remainingItems = todoItems.filter(item => {
+      return !item.done || (item.directoryId !== activeDirectoryItem.id)
     });
 
-    setDirectoryItems(updatedItems);
+    setTodoItems([].concat(remainingItems));
   }
 
   const handleToggleTodoItem = (itemId) => {
@@ -207,46 +209,28 @@ const TodoApp = () => {
     setTodoItems(updatedItems);
   }
 
-  const handleDeleteDoneTodoItems = () => {
-    let remainingItems = todoItems.filter(item => {
-      return !item.done || (item.directoryId !== getActiveDirectoryItem().id)
-    });
-
-    setTodoItems([].concat(remainingItems));
-  }
-
-  const doneTodoItemsExist = (items) => {
-    if (items.filter(item => {return item.done && (item.directoryId === getActiveDirectoryItem().id)}).length > 0) {
-      return true;
-    }
-  }
-
-  const getActiveDirectoryItem = () => {
-    return directoryItems.filter(item => {return item.active})[0];
-  }
-
   return (
     <AppWrapper className="container">
       <div className="row">
         <div className="col-md-2">
           <AppTitle>To-Do Lists</AppTitle>
           <Directory 
-            directoryItems={directoryItems} 
+            directoryItems={directoryItems}
+            activeDirectoryItem={activeDirectoryItem}
             handleAddDirectoryItem={handleAddDirectoryItem}
-            handleDirectoryItemClick={handleDirectoryItemClick}
             handleDeleteDirectoryItem={handleDeleteDirectoryItem}
+            handleChangeActiveDirectoryItem={handleChangeActiveDirectoryItem}
           />
         </div>
         <div className="col-md-5">
           <Editor 
-            handleDeleteDoneTodoItems={handleDeleteDoneTodoItems} 
-            doneTodoItemsExist={doneTodoItemsExist} 
+            activeDirectoryItem={activeDirectoryItem}
+            handleRenameDirectoryItem={handleRenameDirectoryItem}
             todoItems={todoItems} 
-            handleToggleTodoItem={handleToggleTodoItem} 
-            handleDeleteTodoItem={handleDeleteTodoItem} 
             handleAddTodoItem={handleAddTodoItem}
-            handleDirectoryItemNameChange={handleDirectoryItemNameChange}
-            getActiveDirectoryItem={getActiveDirectoryItem}
+            handleDeleteTodoItem={handleDeleteTodoItem} 
+            handleDeleteDoneTodoItems={handleDeleteDoneTodoItems}
+            handleToggleTodoItem={handleToggleTodoItem} 
           />
         </div>
       </div>
@@ -255,16 +239,25 @@ const TodoApp = () => {
 }
 
 const Directory = (props) => {
+  const directoryIsActive = (directoryId) => { return (directoryId === props.activeDirectoryItem.id); }
   const oneItemLeft = props.directoryItems.length === 1;
 
   return (
     <div className="list-group">
       {props.directoryItems.map((item) => (
-        <DirectoryItem key={item.id} active={item.active} onClick={() => props.handleDirectoryItemClick(item.id)}>
+        <DirectoryItem 
+          key={item.id} 
+          active={item.active} 
+          onClick={() => {if (!directoryIsActive(item.id)) props.handleChangeActiveDirectoryItem(item.id)}}
+        >
           {item.name}
-          {!oneItemLeft && <i className="bi bi-trash" onClick={(e) => {e.stopPropagation(); props.handleDeleteDirectoryItem(item.id)}}/>}
+          {!oneItemLeft && <i 
+            className="bi bi-trash" 
+            onClick={(e) => {e.stopPropagation(); props.handleDeleteDirectoryItem(item.id)}}
+          />}
         </DirectoryItem>
       ))}
+
       <AddDirectoryItemButton className="btn btn-primary" onClick={props.handleAddDirectoryItem}>
         <i className="bi bi-journal-plus" />
       </AddDirectoryItemButton>
@@ -275,51 +268,70 @@ const Directory = (props) => {
 const Editor = (props) => {
   const [todoItemText, setTodoItemText] = useState("");
 
-  const handleTodoItemTextChange = (event) => {
-    setTodoItemText(event.target.value);
-  }
+  const localTodoItems = props.todoItems.filter(
+    item => item.directoryId === props.activeDirectoryItem.id
+  );
 
-  const handleAddTodoItem = () => {
-    props.handleAddTodoItem(todoItemText);
+  useEffect(() => {
     setTodoItemText("");
+  }, [props.activeDirectoryItem, props.todoItems]);
+
+  const doneTodoItemsExist = (items) => {
+    return (items.some(item => item.done));
   }
 
   return (
     <>
       <DirectoryItemNameInput 
         placeholder="List Name" 
-        onChange={(e) => props.handleDirectoryItemNameChange(e, props.getActiveDirectoryItem().id)}
-        value={props.getActiveDirectoryItem().name}
+        value={props.activeDirectoryItem.name}
+        onChange={(e) => props.handleRenameDirectoryItem(e, props.activeDirectoryItem.id)}
       />
+
       <div className="row">
-      <div className="col-md-8">
-        <RemoveDoneItemsButton className="btn btn-danger btn-block" onClick={props.handleDeleteDoneTodoItems} disabled={!props.doneTodoItemsExist(props.todoItems)}>
-          Remove Done items
-        </RemoveDoneItemsButton>
+        <div className="col-md-8">
+          <RemoveDoneItemsButton 
+            className="btn btn-danger btn-block" 
+            disabled={!doneTodoItemsExist(localTodoItems)}
+            onClick={props.handleDeleteDoneTodoItems} 
+          >
+            Remove Done items
+          </RemoveDoneItemsButton>
+          <Todos 
+            items={localTodoItems} 
+            onClickTodoItem={props.handleToggleTodoItem} 
+            onDeleteTodoItem={props.handleDeleteTodoItem} 
+          />
+        </div>
       </div>
-      <div className="col-md-8">
-        <Todos items={props.todoItems.filter(item => item.directoryId === props.getActiveDirectoryItem().id)} onToggleTodoItem={props.handleToggleTodoItem} onDeleteTodoItem={props.handleDeleteTodoItem} />
-      </div>
-    </div>
-    <form className="row">
-      <div className="col-md-8">
-        <input type="text" className="form-control" onChange={handleTodoItemTextChange} value={todoItemText} />
-      </div>
-      <div className="col-md-4">
-        <AddTodoItemButton className="btn btn-primary" onClick={(e) => handleAddTodoItem(todoItemText)} disabled={!todoItemText}>
-          {"Add #" + (props.todoItems.filter(item => {return item.directoryId === props.getActiveDirectoryItem().id}).length + 1)}
-        </AddTodoItemButton>
-      </div>
-    </form>
-  </>
+      <form className="row">
+        <div className="col-md-8">
+          <input 
+            className="form-control"
+            type="text"
+            value={todoItemText}
+            onChange={(e) => setTodoItemText(e.target.value)}  
+          />
+        </div>
+        <div className="col-md-4">
+          <AddTodoItemButton 
+            className="btn btn-primary" 
+            disabled={!todoItemText}
+            onClick={(e) => props.handleAddTodoItem(e, todoItemText)} 
+          >
+            {"Add #" + (localTodoItems.length + 1)}
+          </AddTodoItemButton>
+        </div>
+      </form>
+    </>
   );
 }
 
-const TodoItem = (props) => {
+const Todo = (props) => {
   const [listItem, setListItem] = useState(null);
 
   const toggleItemDone = () => {
-    props.onToggleTodoItem(props.id);
+    props.onClickTodoItem(props.id);
   }
 
   const deleteItem = () => {
@@ -354,12 +366,12 @@ const Todos = (props) => {
   return (
     <TodoItemList>
       {props.items.map(item => (
-        <TodoItem 
+        <Todo 
           key={item.id} 
           id={item.id} 
           text={item.text} 
           done={item.done} 
-          onToggleTodoItem={props.onToggleTodoItem} 
+          onClickTodoItem={props.onClickTodoItem} 
           onDeleteTodoItem={props.onDeleteTodoItem} 
         />
       ))}
