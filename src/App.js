@@ -92,7 +92,6 @@ const TodoItemList = styled.ul`
 `;
 
 const TodoApp = () => {
-  const [todoItemText, setTodoItemText] = useState("");
   const [directoryItems, setDirectoryItems] = useState([
     {id: 1, name: "", active: true}
   ]);
@@ -107,10 +106,6 @@ const TodoApp = () => {
     });
 
     setDirectoryItems(updatedItems);
-  }
-
-  const handleTodoItemTextChange = (event) => {
-    setTodoItemText(event.target.value);
   }
 
   const handleAddDirectoryItem = (event) => {
@@ -133,17 +128,15 @@ const TodoApp = () => {
     setDirectoryItems(updatedItems);
   }
 
-  const handleAddTodoItem = (event) => {
-    event.preventDefault();
-
+  const handleAddTodoItem = (text) => {
     let newItem = {
       id: Date.now(),
-      text: todoItemText,
+      directoryId: getActiveDirectoryItem().id,
+      text: text,
       done: false
     };
 
     setTodoItems(todoItems.concat(newItem));
-    setTodoItemText("");
   }
 
   const handleDirectoryItemClick = (itemId) => {
@@ -185,14 +178,14 @@ const TodoApp = () => {
 
   const handleDeleteDoneTodoItems = () => {
     let remainingItems = todoItems.filter(item => {
-      return !item.done
+      return !item.done || (item.directoryId !== getActiveDirectoryItem().id)
     });
 
     setTodoItems([].concat(remainingItems));
   }
 
   const doneTodoItemsExist = (items) => {
-    if (items.filter(item => {return item.done}).length > 0) {
+    if (items.filter(item => {return item.done && (item.directoryId === getActiveDirectoryItem().id)}).length > 0) {
       return true;
     }
   }
@@ -214,13 +207,11 @@ const TodoApp = () => {
         </div>
         <div className="col-md-5">
           <Editor 
-            todoItemText={todoItemText} 
             handleDeleteDoneTodoItems={handleDeleteDoneTodoItems} 
             doneTodoItemsExist={doneTodoItemsExist} 
             todoItems={todoItems} 
             handleToggleTodoItem={handleToggleTodoItem} 
             handleDeleteTodoItem={handleDeleteTodoItem} 
-            handleTodoItemTextChange={handleTodoItemTextChange} 
             handleAddTodoItem={handleAddTodoItem}
             handleDirectoryItemNameChange={handleDirectoryItemNameChange}
             getActiveDirectoryItem={getActiveDirectoryItem}
@@ -245,6 +236,17 @@ const Directory = (props) => {
 }
 
 const Editor = (props) => {
+  const [todoItemText, setTodoItemText] = useState("");
+
+  const handleTodoItemTextChange = (event) => {
+    setTodoItemText(event.target.value);
+  }
+
+  const handleAddTodoItem = () => {
+    props.handleAddTodoItem(todoItemText);
+    setTodoItemText("");
+  }
+
   return (
     <>
       <DirectoryItemNameInput 
@@ -259,15 +261,15 @@ const Editor = (props) => {
         </RemoveDoneItemsButton>
       </div>
       <div className="col-md-8">
-        <Todos items={props.todoItems} onToggleTodoItem={props.handleToggleTodoItem} onDeleteTodoItem={props.handleDeleteTodoItem} />
+        <Todos items={props.todoItems.filter(item => item.directoryId === props.getActiveDirectoryItem().id)} onToggleTodoItem={props.handleToggleTodoItem} onDeleteTodoItem={props.handleDeleteTodoItem} />
       </div>
     </div>
     <form className="row">
       <div className="col-md-8">
-        <input type="text" className="form-control" onChange={props.handleTodoItemTextChange} value={props.todoItemText} />
+        <input type="text" className="form-control" onChange={handleTodoItemTextChange} value={todoItemText} />
       </div>
       <div className="col-md-4">
-        <AddTodoItemButton className="btn btn-primary" onClick={props.handleAddTodoItem} disabled={!props.todoItemText}>
+        <AddTodoItemButton className="btn btn-primary" onClick={(e) => handleAddTodoItem(todoItemText)} disabled={!todoItemText}>
           {"Add #" + (props.todoItems.length + 1)}
         </AddTodoItemButton>
       </div>
@@ -279,7 +281,7 @@ const Editor = (props) => {
 const TodoItem = (props) => {
   const [listItem, setListItem] = useState(null);
 
-  const toggleItemStatus = () => {
+  const toggleItemDone = () => {
     props.onToggleTodoItem(props.id);
   }
 
@@ -302,7 +304,7 @@ const TodoItem = (props) => {
   return (
     <li className={itemClass} ref={li => setListItem(li)}>
       <label className="form-check-label">
-        <input type="checkbox" onChange={toggleItemStatus} /> {props.text}
+        <input type="checkbox" defaultChecked={props.done} onChange={toggleItemDone} /> {props.text}
       </label>
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteItem}>
         <i className="bi bi-trash" />
