@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
+// STYLED COMPONENTS:
 const AppWrapper = styled.div`
   min-height: 99vh;
   min-width: 99vw;
@@ -17,6 +18,7 @@ const AppTitle = styled.h3`
 const DirectoryItem = styled.div`
   margin: 0.3rem 0;
   min-height: 40px;
+  position: relative;
   border: 2px solid #ced4da;
   background-color: ${({ active }) => (active ? '#d1d1d1' : '#fff')};
   color: #495057;
@@ -28,6 +30,8 @@ const DirectoryItem = styled.div`
   cursor: pointer;
 
   i.bi {
+    position: absolute;
+    right: 5px;
     margin-left: auto;
     cursor: pointer;
   
@@ -104,6 +108,7 @@ const TodoItemList = styled.ul`
   }
 `;
 
+// REACT COMPONENTS
 const TodoApp = () => {
   const [directoryItems, setDirectoryItems] = useState([
     {id: 1, name: "", active: true}
@@ -125,7 +130,7 @@ const TodoApp = () => {
     event.preventDefault();
     const newId = Math.max(...directoryItems.map(item => item.id)) + 1
 
-    let newItem = {
+    const newItem = {
       id: newId,
       name: "",
       active: true
@@ -238,43 +243,57 @@ const TodoApp = () => {
   );
 }
 
-const Directory = (props) => {
-  const directoryItemIsActive = (directoryId) => { return (directoryId === props.activeDirectoryItem.id); }
-  const oneItemLeft = props.directoryItems.length === 1;
+const Directory = ({
+  directoryItems,
+  activeDirectoryItem,
+  handleAddDirectoryItem,
+  handleDeleteDirectoryItem,
+  handleChangeActiveDirectoryItem
+}) => {
+  const directoryItemIsActive = (directoryId) => { return (directoryId === activeDirectoryItem.id); }
+  const oneItemLeft = directoryItems.length === 1;
 
   return (
     <div className="list-group">
-      {props.directoryItems.map((item) => (
+      {directoryItems.map((item) => (
         <DirectoryItem 
           key={item.id} 
           active={item.active} 
-          onClick={() => {if (!directoryItemIsActive(item.id)) props.handleChangeActiveDirectoryItem(item.id)}}
+          onClick={() => {if (!directoryItemIsActive(item.id)) handleChangeActiveDirectoryItem(item.id)}}
         >
           {item.name}
           {!oneItemLeft && <i 
             className="bi bi-trash" 
-            onClick={(e) => {e.stopPropagation(); props.handleDeleteDirectoryItem(item.id)}}
+            onClick={(e) => {e.stopPropagation(); handleDeleteDirectoryItem(item.id)}}
           />}
         </DirectoryItem>
       ))}
 
-      <AddDirectoryItemButton className="btn btn-primary" onClick={props.handleAddDirectoryItem}>
+      <AddDirectoryItemButton className="btn btn-primary" onClick={handleAddDirectoryItem}>
         <i className="bi bi-journal-plus" />
       </AddDirectoryItemButton>
     </div>
   )
 }
 
-const Editor = (props) => {
+const Editor = ({
+  activeDirectoryItem,
+  handleRenameDirectoryItem,
+  todoItems,
+  handleAddTodoItem,
+  handleDeleteTodoItem,
+  handleDeleteDoneTodoItems,
+  handleToggleTodoItem
+}) => {
   const [todoItemText, setTodoItemText] = useState("");
 
-  const localTodoItems = props.todoItems.filter(
-    item => item.directoryId === props.activeDirectoryItem.id
+  const localTodoItems = todoItems.filter(
+    item => item.directoryId === activeDirectoryItem.id
   );
 
   useEffect(() => {
     setTodoItemText("");
-  }, [props.activeDirectoryItem, props.todoItems]);
+  }, [activeDirectoryItem, todoItems]);
 
   const doneTodoItemsExist = (items) => {
     return (items.some(item => item.done));
@@ -284,8 +303,8 @@ const Editor = (props) => {
     <>
       <DirectoryItemNameInput 
         placeholder="List Name" 
-        value={props.activeDirectoryItem.name}
-        onChange={(e) => props.handleRenameDirectoryItem(e, props.activeDirectoryItem.id)}
+        value={activeDirectoryItem.name}
+        onChange={(e) => handleRenameDirectoryItem(e, activeDirectoryItem.id)}
       />
 
       <div className="row">
@@ -293,14 +312,14 @@ const Editor = (props) => {
           <RemoveDoneItemsButton 
             className="btn btn-danger btn-block" 
             disabled={!doneTodoItemsExist(localTodoItems)}
-            onClick={props.handleDeleteDoneTodoItems} 
+            onClick={handleDeleteDoneTodoItems} 
           >
             Remove Done items
           </RemoveDoneItemsButton>
           <Todos 
             items={localTodoItems} 
-            onClickTodoItem={props.handleToggleTodoItem} 
-            onDeleteTodoItem={props.handleDeleteTodoItem} 
+            onClickTodoItem={handleToggleTodoItem} 
+            onDeleteTodoItem={handleDeleteTodoItem} 
           />
         </div>
       </div>
@@ -317,7 +336,7 @@ const Editor = (props) => {
           <AddTodoItemButton 
             className="btn btn-primary" 
             disabled={!todoItemText}
-            onClick={(e) => props.handleAddTodoItem(e, todoItemText)} 
+            onClick={(e) => handleAddTodoItem(e, todoItemText)} 
           >
             {"Add #" + (localTodoItems.length + 1)}
           </AddTodoItemButton>
@@ -327,15 +346,22 @@ const Editor = (props) => {
   );
 }
 
-const Todo = (props) => {
+const Todo = ({
+  key,
+  id,
+  text,
+  done,
+  onClickTodoItem,
+  onDeleteTodoItem 
+}) => {
   const [listItem, setListItem] = useState(null);
 
   const toggleItemDone = () => {
-    props.onClickTodoItem(props.id);
+    onClickTodoItem(id);
   }
 
   const deleteItem = () => {
-    props.onDeleteTodoItem(props.id);
+    onDeleteTodoItem(id);
   }
 
   useEffect(() => {
@@ -348,12 +374,12 @@ const Todo = (props) => {
     };
   }, [listItem]);
 
-  let itemClass = "form-check todoitem " + (props.done ? "done" : "undone");
+  let itemClass = "form-check todoitem " + (done ? "done" : "undone");
 
   return (
     <li className={itemClass} ref={li => setListItem(li)}>
       <label className="form-check-label">
-        <input type="checkbox" defaultChecked={props.done} onChange={toggleItemDone} /> {props.text}
+        <input type="checkbox" defaultChecked={done} onChange={toggleItemDone} /> {text}
       </label>
       <button type="button" className="btn btn-danger btn-sm" onClick={deleteItem}>
         <i className="bi bi-trash" />
@@ -362,17 +388,21 @@ const Todo = (props) => {
   );
 }
 
-const Todos = (props) => {
+const Todos = ({
+  items,
+  onClickTodoItem,
+  onDeleteTodoItem
+}) => {
   return (
     <TodoItemList>
-      {props.items.map(item => (
+      {items.map(item => (
         <Todo 
           key={item.id} 
           id={item.id} 
           text={item.text} 
           done={item.done} 
-          onClickTodoItem={props.onClickTodoItem} 
-          onDeleteTodoItem={props.onDeleteTodoItem} 
+          onClickTodoItem={onClickTodoItem} 
+          onDeleteTodoItem={onDeleteTodoItem} 
         />
       ))}
     </TodoItemList>
